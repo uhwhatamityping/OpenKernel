@@ -94,6 +94,19 @@ def get_resolution():
 
 resolution = get_resolution()
 
+def ls(path="."):
+    # Get all entries in the directory
+    entries = os.listdir(path)
+
+    # Print them spaced out like a normal 'ls' command
+    for entry in sorted(entries):
+        print(entry, end="  ")
+    print()  # Newline
+
+# Test the function
+
+
+
 print(f"""
     .....................   ..........
      :7J??7777777777777777??YPY?#BB#######J    OS: OpenTails 0.1 x86_64
@@ -143,6 +156,21 @@ while True:
 
     elif command == "resolution":
         print(resolution)
+
+    elif command == "ls":
+        ls()
+
+    elif command == "pwd":
+        print(os.getcwd())
+
+    elif command == "cd":
+        path = input("Enter directory: ")
+        try:
+            os.chdir(path)
+        except FileNotFoundError:
+            print(f"Directory not found: {path}")
+        except PermissionError:
+            print(f"Permission denied: {path}")
 
     elif command == "help":
         print("Available commands: sysinfo, clear, echo, about, cpu, ram, resolution, os, help, exit")
