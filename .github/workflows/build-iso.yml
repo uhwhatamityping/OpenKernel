@@ -26,27 +26,10 @@ jobs:
             squashfs-tools \
             coreutils
 
-      - name: Show environment
-        run: |
-          echo "Runner architecture:"
-          uname -m
-
-          echo "Runner Debian architecture:"
-          dpkg --print-architecture
-
-          echo "env:"
-          ls -l /usr/bin/env
-          file /usr/bin/env
-
-          echo "live-build:"
-          lb --version
-
-          echo "debootstrap:"
-          debootstrap --version
-
       - name: Clean live-build
         run: |
           sudo lb clean --purge || true
+          sudo rm -rf config cache chroot binary
 
       - name: Configure live-build
         run: |
@@ -57,7 +40,18 @@ jobs:
             --mirror-bootstrap http://deb.debian.org/debian \
             --mirror-chroot http://deb.debian.org/debian \
             --mirror-binary http://deb.debian.org/debian \
+            --mirror-chroot-security http://security.debian.org/debian-security \
             --mirror-binary-security http://security.debian.org/debian-security
+
+      - name: Force Debian repositories
+        run: |
+          mkdir -p config/archives
+
+          cat > config/archives/debian.list.chroot <<'EOF'
+          deb http://deb.debian.org/debian trixie main
+          deb http://deb.debian.org/debian trixie-updates main
+          deb http://security.debian.org/debian-security trixie-security main
+          EOF
 
       - name: Add Python
         run: |
@@ -72,11 +66,9 @@ jobs:
       - name: Add OpenTails terminal
         run: |
           mkdir -p config/includes.chroot/opt/opentails
+          cp terminal.py config/includes.chroot/opt/opentails/terminal.py
 
-          cp terminal.py \
-            config/includes.chroot/opt/opentails/terminal.py
-
-      - name: Create OpenTails service
+      - name: Create OpenTails systemd service
         run: |
           mkdir -p \
             config/includes.chroot/etc/systemd/system/multi-user.target.wants
