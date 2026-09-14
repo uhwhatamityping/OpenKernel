@@ -172,6 +172,59 @@ while True:
         except PermissionError:
             print(f"Permission denied: {path}")
 
+    elif command == "mkdir":
+        path = input("Enter directory name: ")
+        try:
+            os.mkdir(path)
+        except FileExistsError:
+            print(f"Directory already exists: {path}")
+        except PermissionError:
+            print(f"Permission denied: {path}")
+
+   
+    elif command == "touch":
+        filename = input("Enter filename..  ")
+
+        # 1. Open with Read/Write permissions and Create if it doesn't exist
+        flags = os.O_RDWR | os.O_CREAT
+        fd = os.open(filename, flags, 0o666)
+
+        try:
+            # 2. Read existing content (will be empty "" if the file was just created)
+            # os.read requires the file descriptor and the maximum number of bytes to read
+            content = os.read(fd, 1024).decode('utf-8')
+            print(f"File content: '{content}'")
+
+            # 3. Write new content to the file
+            text_to_write = input("Enter content to write: ")
+            os.write(fd, text_to_write.encode('utf-8'))
+
+        finally:
+            # 4. Always close the file descriptor
+            os.close(fd)
+
+    elif command == "cat":
+        filename = input("Enter filename: ")
+        try:
+            with open(filename, 'r') as f:
+                print(f.read())
+        except FileNotFoundError:
+            print(f"File not found: {filename}")
+        except PermissionError:
+            print(f"Permission denied: {filename}")
+
+
+    elif command == "rm":
+        path = input("Enter file to remove: ")
+        try:
+            os.remove(path)
+        except FileNotFoundError:
+            print(f"File not found: {path}")
+        except PermissionError:
+            print(f"Permission denied: {path}")
+
+
+
     elif command == "help":
         print("Available commands: sysinfo, clear, echo, about, cpu, ram, resolution, os, help, exit")
 
