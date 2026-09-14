@@ -15,42 +15,47 @@ jobs:
       - name: Checkout OpenTails
         uses: actions/checkout@v4
 
-      - name: Install build tools
+      - name: Install basic tools
         run: |
           sudo apt update
           sudo apt install -y \
-            live-build \
-            debootstrap \
-            debian-archive-keyring \
+            wget \
+            curl \
             xorriso \
             squashfs-tools \
-            coreutils
+            debootstrap \
+            debian-archive-keyring \
+            dpkg-dev
 
-      - name: Show environment
+      - name: Install Debian Trixie live-build
         run: |
-          echo "Architecture:"
-          uname -m
+          mkdir -p /tmp/live-build
 
-          echo "Debian architecture:"
-          dpkg --print-architecture
+          cd /tmp/live-build
 
-          echo "live-build:"
+          wget http://deb.debian.org/debian/pool/main/l/live-build/live-build_20250505+deb13u1_all.deb
+
+          sudo dpkg -i live-build_20250505+deb13u1_all.deb || true
+
+          sudo apt-get install -f -y
+
+      - name: Verify live-build
+        run: |
+          which lb
           lb --version
-
-          echo "debootstrap:"
-          debootstrap --version
 
       - name: Clean previous build
         run: |
           sudo lb clean --purge || true
+
           sudo rm -rf \
             cache \
             chroot \
             binary \
-            .build \
-            config
+            config \
+            .build
 
-      - name: Configure live-build
+      - name: Configure Debian Live
         run: |
           lb config \
             --distribution trixie \
@@ -119,7 +124,7 @@ jobs:
           chmod +x \
             config/includes.chroot/opt/opentails/terminal.py
 
-      - name: Create OpenTails systemd service
+      - name: Create OpenTails service
         run: |
           mkdir -p \
             config/includes.chroot/etc/systemd/system/multi-user.target.wants
@@ -132,6 +137,7 @@ jobs:
 
           [Service]
           Type=simple
+
           ExecStart=/usr/bin/python3 /opt/opentails/terminal.py
 
           Restart=on-failure
@@ -170,16 +176,8 @@ jobs:
 
       - name: Verify ISO
         run: |
-          echo "Generated files:"
-          ls -lh
-
-          echo
-          echo "ISO information:"
+          ls -lh live-image-amd64.hybrid.iso
           file live-image-amd64.hybrid.iso
-
-          echo
-          echo "ISO size:"
-          du -h live-image-amd64.hybrid.iso
 
       - name: Upload OpenTails ISO
         uses: actions/upload-artifact@v4
