@@ -26,10 +26,29 @@ jobs:
             squashfs-tools \
             coreutils
 
-      - name: Clean live-build
+      - name: Show environment
+        run: |
+          echo "Architecture:"
+          uname -m
+
+          echo "Debian architecture:"
+          dpkg --print-architecture
+
+          echo "live-build:"
+          lb --version
+
+          echo "debootstrap:"
+          debootstrap --version
+
+      - name: Clean previous build
         run: |
           sudo lb clean --purge || true
-          sudo rm -rf config cache chroot binary
+          sudo rm -rf \
+            cache \
+            chroot \
+            binary \
+            .build \
+            config
 
       - name: Configure live-build
         run: |
@@ -37,13 +56,14 @@ jobs:
             --distribution trixie \
             --architectures amd64 \
             --binary-images iso-hybrid \
+            --linux-packages linux-image-amd64 \
             --mirror-bootstrap http://deb.debian.org/debian \
             --mirror-chroot http://deb.debian.org/debian \
             --mirror-binary http://deb.debian.org/debian \
             --mirror-chroot-security http://security.debian.org/debian-security \
             --mirror-binary-security http://security.debian.org/debian-security
 
-      - name: Force Debian repositories
+      - name: Configure Debian repositories
         run: |
           mkdir -p config/archives
 
@@ -53,20 +73,42 @@ jobs:
           deb http://security.debian.org/debian-security trixie-security main
           EOF
 
-      - name: Add Python
+          cat > config/archives/debian.list.binary <<'EOF'
+          deb http://deb.debian.org/debian trixie main
+          deb http://deb.debian.org/debian trixie-updates main
+          deb http://security.debian.org/debian-security trixie-security main
+          EOF
+
+      - name: Add OpenTails packages
         run: |
           mkdir -p config/package-lists
 
           cat > config/package-lists/opentails.list.chroot <<'EOF'
+          linux-image-amd64
           python3
           python3-pip
           python3-venv
+          systemd
+          sudo
+          curl
+          wget
+          nano
+          bash
+          coreutils
+          procps
+          iproute2
+          iputils-ping
           EOF
 
       - name: Add OpenTails terminal
         run: |
           mkdir -p config/includes.chroot/opt/opentails
-          cp terminal.py config/includes.chroot/opt/opentails/terminal.py
+
+          cp terminal.py \
+            config/includes.chroot/opt/opentails/terminal.py
+
+          chmod +x \
+            config/includes.chroot/opt/opentails/terminal.py
 
       - name: Create OpenTails systemd service
         run: |
@@ -76,12 +118,16 @@ jobs:
           cat > config/includes.chroot/etc/systemd/system/opentails.service <<'EOF'
           [Unit]
           Description=OpenTails Terminal
-          After=getty-pre.target
+          After=systemd-user-sessions.service getty-pre.target
+          Conflicts=getty@tty1.service
 
           [Service]
           Type=simple
+
           ExecStart=/usr/bin/python3 /opt/opentails/terminal.py
+
           Restart=on-failure
+          RestartSec=1
 
           StandardInput=tty
           StandardOutput=tty
@@ -100,14 +146,32 @@ jobs:
             /etc/systemd/system/opentails.service \
             config/includes.chroot/etc/systemd/system/multi-user.target.wants/opentails.service
 
+      - name: Disable tty1 getty
+        run: |
+          mkdir -p \
+            config/includes.chroot/etc/systemd/system/getty@tty1.service.d
+
+          cat > config/includes.chroot/etc/systemd/system/getty@tty1.service.d/opentails.conf <<'EOF'
+          [Unit]
+          ConditionPathExists=/nonexistent
+          EOF
+
       - name: Build OpenTails ISO
         run: |
           sudo lb build
 
-      - name: Check ISO
+      - name: Verify ISO
         run: |
-          ls -lh live-image-amd64.hybrid.iso
+          echo "Generated files:"
+          ls -lh
+
+          echo
+          echo "ISO information:"
           file live-image-amd64.hybrid.iso
+
+          echo
+          echo "ISO size:"
+          du -h live-image-amd64.hybrid.iso
 
       - name: Upload OpenTails ISO
         uses: actions/upload-artifact@v4
