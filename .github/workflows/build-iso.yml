@@ -56,7 +56,8 @@ jobs:
             --distribution trixie \
             --architectures amd64 \
             --binary-images iso-hybrid \
-            --linux-packages linux-image-amd64 \
+            --linux-packages linux-image \
+            --linux-flavours amd64 \
             --mirror-bootstrap http://deb.debian.org/debian \
             --mirror-chroot http://deb.debian.org/debian \
             --mirror-binary http://deb.debian.org/debian \
@@ -84,7 +85,6 @@ jobs:
           mkdir -p config/package-lists
 
           cat > config/package-lists/opentails.list.chroot <<'EOF'
-          linux-image-amd64
           python3
           python3-pip
           python3-venv
