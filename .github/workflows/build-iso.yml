@@ -1,0 +1,68 @@
+name: Build OpenTails ISO
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "terminal.py"
+      - ".github/workflows/build-iso.yml"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout OpenTails
+        uses: actions/checkout@v4
+
+      - name: Install build tools
+        run: |
+          sudo apt update
+          sudo apt install -y live-build xorriso
+
+      - name: Configure live-build
+        run: |
+          lb config \
+            --distribution stable \
+            --architectures amd64
+
+      - name: Add Python
+        run: |
+          mkdir -p config/package-lists
+          echo python3 > config/package-lists/opentails.list.chroot
+
+      - name: Add OpenTails terminal
+        run: |
+          mkdir -p config/includes.chroot/opt/opentails
+          cp terminal.py config/includes.chroot/opt/opentails/terminal.py
+
+      - name: Create OpenTails service
+        run: |
+          mkdir -p config/includes.chroot/etc/systemd/system/multi-user.target.wants
+
+          cat > config/includes.chroot/etc/systemd/system/opentails.service <<'EOF'
+          [Unit]
+          Description=OpenTails Terminal
+          After=getty.target
+
+          [Service]
+          Type=simple
+          ExecStart=/usr/bin/python3 /opt/opentails/terminal.py
+          Restart=on-failure
+
+          [Install]
+          WantedBy=multi-user.target
+          EOF
+
+          ln -sf /etc/systemd/system/opentails.service \
+            config/includes.chroot/etc/systemd/system/multi-user.target.wants/opentails.service
+
+      - name: Build ISO
+        run: |
+          sudo lb build
+
+      - name: Upload OpenTails ISO
+        uses: actions/upload-artifact@v4
+        with:
+          name: OpenTails-x86_64
+          path: live-image-amd64.hybrid.iso
