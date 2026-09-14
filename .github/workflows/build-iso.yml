@@ -15,45 +15,49 @@ jobs:
       - name: Checkout OpenTails
         uses: actions/checkout@v4
 
-      - name: Show build environment
-        run: |
-          echo "Architecture:"
-          uname -m
-
-          echo "Debian architecture:"
-          dpkg --print-architecture
-
-          echo "env:"
-          which env
-          ls -l /usr/bin/env
-          file /usr/bin/env
-
       - name: Install build tools
         run: |
           sudo apt update
           sudo apt install -y \
             live-build \
             debootstrap \
+            debian-archive-keyring \
             xorriso \
             squashfs-tools \
-            systemd-container \
             coreutils
 
-      - name: Show live-build version
+      - name: Show environment
         run: |
+          echo "Runner architecture:"
+          uname -m
+
+          echo "Runner Debian architecture:"
+          dpkg --print-architecture
+
+          echo "env:"
+          ls -l /usr/bin/env
+          file /usr/bin/env
+
+          echo "live-build:"
           lb --version
+
+          echo "debootstrap:"
           debootstrap --version
 
-      - name: Clean previous live-build files
+      - name: Clean live-build
         run: |
           sudo lb clean --purge || true
 
       - name: Configure live-build
         run: |
           lb config \
-            --distribution stable \
+            --distribution trixie \
             --architectures amd64 \
-            --binary-images iso-hybrid
+            --binary-images iso-hybrid \
+            --mirror-bootstrap http://deb.debian.org/debian \
+            --mirror-chroot http://deb.debian.org/debian \
+            --mirror-binary http://deb.debian.org/debian \
+            --mirror-binary-security http://security.debian.org/debian-security
 
       - name: Add Python
         run: |
@@ -108,9 +112,9 @@ jobs:
         run: |
           sudo lb build
 
-      - name: Check generated ISO
+      - name: Check ISO
         run: |
-          ls -lh
+          ls -lh live-image-amd64.hybrid.iso
           file live-image-amd64.hybrid.iso
 
       - name: Upload OpenTails ISO
