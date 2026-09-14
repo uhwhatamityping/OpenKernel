@@ -15,54 +15,107 @@ jobs:
       - name: Checkout OpenTails
         uses: actions/checkout@v4
 
+      - name: Show build environment
+        run: |
+          echo "Architecture:"
+          uname -m
+
+          echo "Debian architecture:"
+          dpkg --print-architecture
+
+          echo "env:"
+          which env
+          ls -l /usr/bin/env
+          file /usr/bin/env
+
       - name: Install build tools
         run: |
           sudo apt update
-          sudo apt install -y live-build xorriso
+          sudo apt install -y \
+            live-build \
+            debootstrap \
+            xorriso \
+            squashfs-tools \
+            systemd-container \
+            coreutils
+
+      - name: Show live-build version
+        run: |
+          lb --version
+          debootstrap --version
+
+      - name: Clean previous live-build files
+        run: |
+          sudo lb clean --purge || true
 
       - name: Configure live-build
         run: |
           lb config \
             --distribution stable \
-            --architectures amd64
+            --architectures amd64 \
+            --binary-images iso-hybrid
 
       - name: Add Python
         run: |
           mkdir -p config/package-lists
-          echo python3 > config/package-lists/opentails.list.chroot
+
+          cat > config/package-lists/opentails.list.chroot <<'EOF'
+          python3
+          python3-pip
+          python3-venv
+          EOF
 
       - name: Add OpenTails terminal
         run: |
           mkdir -p config/includes.chroot/opt/opentails
-          cp terminal.py config/includes.chroot/opt/opentails/terminal.py
+
+          cp terminal.py \
+            config/includes.chroot/opt/opentails/terminal.py
 
       - name: Create OpenTails service
         run: |
-          mkdir -p config/includes.chroot/etc/systemd/system/multi-user.target.wants
+          mkdir -p \
+            config/includes.chroot/etc/systemd/system/multi-user.target.wants
 
           cat > config/includes.chroot/etc/systemd/system/opentails.service <<'EOF'
           [Unit]
           Description=OpenTails Terminal
-          After=getty.target
+          After=getty-pre.target
 
           [Service]
           Type=simple
           ExecStart=/usr/bin/python3 /opt/opentails/terminal.py
           Restart=on-failure
 
+          StandardInput=tty
+          StandardOutput=tty
+          StandardError=tty
+
+          TTYPath=/dev/tty1
+          TTYReset=yes
+          TTYVHangup=yes
+          TTYVTDisallocate=yes
+
           [Install]
           WantedBy=multi-user.target
           EOF
 
-          ln -sf /etc/systemd/system/opentails.service \
+          ln -sf \
+            /etc/systemd/system/opentails.service \
             config/includes.chroot/etc/systemd/system/multi-user.target.wants/opentails.service
 
-      - name: Build ISO
+      - name: Build OpenTails ISO
         run: |
           sudo lb build
+
+      - name: Check generated ISO
+        run: |
+          ls -lh
+          file live-image-amd64.hybrid.iso
 
       - name: Upload OpenTails ISO
         uses: actions/upload-artifact@v4
         with:
           name: OpenTails-x86_64
           path: live-image-amd64.hybrid.iso
+          if-no-files-found: error
