@@ -1,183 +1,113 @@
-# OpenTails
+# OpenKernel
 
-A Python-first Linux distribution with its own desktop environment, tools, and ecosystem.
+«An experimental Python-powered operating environment.»
 
-«OpenTails is still heavily in development. Expect things to break. A lot.»
+OpenKernel is a small experimental project exploring how an operating-system-like environment can be built using Python.
 
-# What is OpenTails?
+It includes its own shell, system information tools, boot concepts, and an experimental desktop environment called dekx.
 
-OpenTails is a Linux distribution built around a simple idea:
+# 🚧 Status
 
-Use Linux for the low-level stuff, and Python for as much of the operating system experience as possible.
+OpenKernel is currently experimental and under development.
 
-Linux handles the parts that require serious low-level hardware support, such as:
+It is not a real operating-system kernel. The project is primarily an educational and experimental environment built with Python.
 
-- Hardware drivers
-- Memory management
-- Process management
-- Filesystems
-- Networking
-- Graphics
-- Hardware compatibility
+Things may change, break, or get completely redesigned. That's part of the fun. :)
 
-OpenTails builds on top of that with its own:
+# ✨ Features
 
-- Python-based system software
-- Shell
-- Desktop environment
-- Applications
-- Package-management experience
-- Configuration tools
-- User experience
+- 🐚 Custom OpenKernel shell
+- 🖥️ System and hardware information
+- ⚡ CPU and display detection
+- ⏱️ System uptime information
+- 🖼️ Experimental "dekx" desktop environment
+- 🚀 Experimental boot system
+- 🧩 Modular project structure
+- 🐍 Python-powered
 
-The goal isn't to reinvent the Linux kernel.
+# 📁 Project Components
 
-The goal is to build an operating system experience on top of Linux, while keeping Python at the heart of OpenTails.
+Component| Description
+"openkernel-core"| Core functionality
+"openkernel-shell"| OpenKernel command-line shell
+"openkernel-boot"| Experimental boot functionality
+"openkernel-dekx"| Experimental desktop environment
+"openkernel-utils"| Utility and helper functions
 
-# Dekx
+# 🖥️ dekx
 
-Dekx is the desktop environment for OpenTails.
+dekx is OpenKernel's experimental graphical desktop environment.
 
-It is intended to provide the graphical experience of the operating system, including:
+The goal is to eventually provide a lightweight graphical interface for interacting with OpenKernel while keeping the project modular.
 
-- Windows
-- Panels
-- Menus
-- Application launching
-- Desktop management
-- System tools
-- OpenTails-specific UI
+# 🛠️ Built With
 
-The default visual style is planned to be pixel-art inspired.
+- Python
+- Standard Python libraries
+- Additional Python packages where required
 
-# Packages
+# 🚀 Getting Started
 
-OpenTails uses ".deb" packages as its primary package format.
+Clone the repository:
 
-This means OpenTails can build on the huge ecosystem that already exists around Debian packages instead of inventing an entirely new package format.
+git clone https://github.com/uhwhatamityping/OpenKernel.git
+cd OpenKernel
 
-The planned package-management interface is:
+Create a virtual environment:
 
-ot install <package>
-ot remove <package>
-ot update
-ot upgrade
-ot search <package>
+python -m venv .venv
 
-The long-term goal is for installing software to feel like a native OpenTails experience while still benefiting from the existing Linux software ecosystem.
+Activate it on Linux/macOS:
 
-# Architecture
+source .venv/bin/activate
 
-The planned architecture looks roughly like this:
+On Windows:
 
-                 OpenTails
-                     │
-        ┌────────────┴────────────┐
-        │                         │
-      Dekx                  OpenTails Shell
-        │                         │
-        └────────────┬────────────┘
-                     │
-             OpenTails Services
-                     │
-                Python Runtime
-                     │
-              Linux Userspace
-                     │
-                Linux Kernel
-                     │
-                  Hardware
+.venv\Scripts\activate
 
-This isn't the final architecture yet. OpenTails is still being developed, so parts of this design may change.
+Install the dependencies:
 
-# Why Python?
+pip install -r requirements.txt
 
-Python is the main language behind the OpenTails project because it makes it possible to develop system software and applications quickly without having to write everything in a low-level language.
+Then run the project using the appropriate entry point.
 
-Python is especially useful for:
+«The project is still changing, so the exact startup command may change between versions.»
 
-- System utilities
-- Shell components
-- Desktop applications
-- Configuration tools
-- Package-management tools
-- Prototyping
-- OpenTails applications
+# 🗺️ Roadmap
 
-Low-level components that Python cannot reasonably handle will be provided by Linux and other lower-level components.
+- [x] Basic project foundation
+- [x] CPU information
+- [x] Display information
+- [x] Initial shell
+- [ ] Improve shell commands
+- [ ] Improve hardware detection
+- [ ] Develop "dekx"
+- [ ] Improve boot system
+- [ ] Add configuration system
+- [ ] Improve modularity
+- [ ] Add documentation
+- [ ] Create a proper release system
 
-# Applications
+# 🤝 Contributing
 
-OpenTails applications are intended to integrate with Dekx and the OpenTails system.
+OpenKernel is an experimental project, and contributions are welcome.
 
-The long-term goal is to make creating an OpenTails application as approachable as possible, especially for Python developers.
+If you want to experiment with the project:
 
-A future OpenTails application might look something like:
+1. Fork the repository
+2. Create a branch
+3. Make your changes
+4. Test them
+5. Open a pull request
 
-my-app/
-├── app.py
-├── manifest
-├── icon.png
-└── assets/
+# 📜 License
 
-and eventually be distributed as a ".deb" package.
+This project is currently experimental.
 
-# Current Status
+See the repository for the current license information.
 
-OpenTails is early in development.
+# 💙 About
 
-Currently, the project is primarily focused on building the foundations of the system.
+OpenKernel started as a small experiment in creating an operating-system-like environment with Python.
 
-Expect:
-
-- Missing features
-- Experimental code
-- Broken things
-- Major architecture changes
-- Probably some questionable decisions
-
-That's part of the process.
-
-# Roadmap
-
-The roadmap is not set in stone, but the general direction is:
-
-- [x] Start the OpenTails project
-- [x] Establish the Python-first concept
-- [x] Plan Dekx
-- [x] Choose Linux as the kernel foundation
-- [x] Choose ".deb" as the primary package format
-- [ ] Build the OpenTails shell
-- [ ] Build core OpenTails services
-- [ ] Begin Dekx development
-- [ ] Create the OpenTails application API
-- [ ] Build the OpenTails package manager
-- [ ] Build native OpenTails applications
-- [ ] Create a bootable OpenTails image
-- [ ] Test OpenTails in QEMU
-- [ ] Test on real hardware
-- [ ] Create installable OpenTails releases
-
-# Development
-
-OpenTails is primarily written in Python.
-
-The project is developed with experimentation in mind. The architecture may change significantly as development progresses.
-
-For safe early testing, virtualization such as QEMU can be used before attempting to boot OpenTails on physical hardware.
-
-# License
-
-OpenTails is licensed under the GNU General Public License v3.0.
-
-See ""LICENSE"" (LICENSE) for the full license.
-
-Branding
-
-OpenTails and Dekx are project names and branding.
-
-The software is open source under GPL-3.0, while the project's branding may be subject to separate rules.
-
----
-
-OpenTails — Linux underneath. Python at the heart.
+The project is about learning, experimenting, and seeing how far a Python-based environment can go.
